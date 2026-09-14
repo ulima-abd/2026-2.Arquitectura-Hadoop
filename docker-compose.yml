@@ -1,0 +1,83 @@
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    ports:
+      - 9870:9870
+      - 9000:9000
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      CLUSTER_NAME: "demo"
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      HDFS_CONF_dfs_replication: "1"
+      MAPRED_CONF_mapreduce_framework_name: "yarn"
+      MAPRED_CONF_yarn_app_mapreduce_am_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
+      MAPRED_CONF_mapreduce_map_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
+      MAPRED_CONF_mapreduce_reduce_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_datanode:/hadoop/dfs/data
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      HDFS_CONF_dfs_replication: "1"
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8
+    container_name: resourcemanager
+    hostname: resourcemanager
+    ports:
+      - 8088:8088
+      - 8032:8032
+    depends_on:
+      - namenode
+      - datanode
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      YARN_CONF_yarn_resourcemanager_hostname: "resourcemanager"
+      YARN_CONF_yarn_resourcemanager_address: "resourcemanager:8032"
+      YARN_CONF_yarn_resourcemanager_scheduler_address: "resourcemanager:8030"
+      YARN_CONF_yarn_resourcemanager_resource___tracker_address: "resourcemanager:8031"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://resourcemanager:8088/ws/v1/cluster/info"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  nodemanager:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8
+    container_name: nodemanager
+    restart: on-failure
+    depends_on:
+      resourcemanager:
+        condition: service_healthy
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+      YARN_CONF_yarn_resourcemanager_hostname: "resourcemanager"
+      YARN_CONF_yarn_resourcemanager_address: "resourcemanager:8032"
+      YARN_CONF_yarn_resourcemanager_scheduler_address: "resourcemanager:8030"
+      YARN_CONF_yarn_resourcemanager_resource___tracker_address: "resourcemanager:8031"
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
+    container_name: historyserver
+    ports:
+      - 8188:8188
+    depends_on:
+      - namenode
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      CORE_CONF_fs_defaultFS: "hdfs://namenode:9000"
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+  hadoop_historyserver:
