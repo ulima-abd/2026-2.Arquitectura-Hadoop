@@ -16,6 +16,10 @@ services:
       MAPRED_CONF_yarn_app_mapreduce_am_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
       MAPRED_CONF_mapreduce_map_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
       MAPRED_CONF_mapreduce_reduce_env: "HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1"
+      YARN_CONF_yarn_resourcemanager_hostname: "resourcemanager"
+      YARN_CONF_yarn_resourcemanager_address: "resourcemanager:8032"
+      YARN_CONF_yarn_resourcemanager_scheduler_address: "resourcemanager:8030"
+      YARN_CONF_yarn_resourcemanager_resource___tracker_address: "resourcemanager:8031"
 
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
@@ -64,6 +68,8 @@ services:
       YARN_CONF_yarn_resourcemanager_address: "resourcemanager:8032"
       YARN_CONF_yarn_resourcemanager_scheduler_address: "resourcemanager:8030"
       YARN_CONF_yarn_resourcemanager_resource___tracker_address: "resourcemanager:8031"
+      YARN_CONF_yarn_nodemanager_aux___services: "mapreduce_shuffle"
+      YARN_CONF_yarn_nodemanager_aux___services_mapreduce_shuffle_class: "org.apache.hadoop.mapred.ShuffleHandler"
 
   historyserver:
     image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8
