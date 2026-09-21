@@ -88,6 +88,10 @@ hdfs dfs -cat /user/root/output/part-r-00000
 
 > Mientras el job corre, puedes verlo en la UI de YARN ([http://localhost:8088](http://localhost:8088)) con estado `RUNNING` y luego `SUCCEEDED`, y su historial en el Job History Server ([http://localhost:8188](http://localhost:8188)).
 
+> **Nota — configuración YARN necesaria:** el `docker-compose.yml` entregado ya incluye la configuración necesaria para que el job de `wordcount` encuentre el `resourcemanager` y pueda ejecutar los mappers/reducers. Si adaptas el compose y el job falla, revisa que:
+> - El servicio `namenode` (desde donde se corre `hadoop jar`) tenga las variables `YARN_CONF_yarn_resourcemanager_hostname`, `_address`, `_scheduler_address` y `_resource___tracker_address` — sin ellas, el cliente no sabe dónde está el resourcemanager y el job nunca arranca (se queda reintentando la conexión).
+> - El servicio `nodemanager` tenga `YARN_CONF_yarn_nodemanager_aux___services=mapreduce_shuffle` y `YARN_CONF_yarn_nodemanager_aux___services_mapreduce_shuffle_class=org.apache.hadoop.mapred.ShuffleHandler` — sin esto, los mappers fallan con `InvalidAuxServiceException: The auxService:mapreduce_shuffle does not exist`.
+
 **Salida esperada:**
 
 ```
